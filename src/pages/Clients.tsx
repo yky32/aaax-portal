@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { fetchR, fetchRaw } from "../lib/aaax";
+import { ForbiddenNote } from "../components/ForbiddenNote";
+import { fetchR, fetchRaw, formatErr, isForbidden } from "../lib/aaax";
 
 type ClientRow = { id?: string; clientId?: string; clientName?: string };
 
@@ -8,12 +9,12 @@ export default function Clients() {
   const [out, setOut] = useState("");
   const [createId, setCreateId] = useState("");
   const [createName, setCreateName] = useState("");
-  const [err, setErr] = useState("");
+  const [err, setErr] = useState<unknown>(null);
 
   const dump = (label: string, value: unknown) => setOut(`${label}\n${JSON.stringify(value, null, 2)}`);
 
   async function lookup() {
-    setErr("");
+    setErr(null);
     try {
       const data = await fetchR<ClientRow>(`/clients/${encodeURIComponent(id)}`);
       dump("GET /clients/{id}", data);
@@ -23,7 +24,7 @@ export default function Clients() {
   }
 
   async function create() {
-    setErr("");
+    setErr(null);
     try {
       const data = await fetchR<ClientRow>("/clients", {
         method: "POST",
@@ -41,7 +42,7 @@ export default function Clients() {
   }
 
   async function rotateSecret() {
-    setErr("");
+    setErr(null);
     try {
       const { status, json } = await fetchRaw(`/clients/${encodeURIComponent(id)}`, { method: "PUT" });
       dump(`PUT /clients/{id} HTTP ${status}`, json);
@@ -82,7 +83,8 @@ export default function Clients() {
           POST /clients
         </button>
       </div>
-      {err ? <pre className="out err">{err}</pre> : null}
+      {isForbidden(err) ? <ForbiddenNote err={err} api="GET /clients/{id}" /> : null}
+      {err && !isForbidden(err) ? <pre className="out err">{formatErr(err)}</pre> : null}
       {out ? <pre className="out">{out}</pre> : null}
     </section>
   );

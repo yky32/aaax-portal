@@ -28,9 +28,16 @@ CORS on the jar already allows `http://localhost:*` and `http://127.0.0.1:*`. Wi
 
 ## What it configures
 
-Existing HTTP only: clients (`GET/POST/PUT /clients/{id}` — no list-all), `/mgt/users`, `/system-configurations`, housekeeping, `/users/me`, OpenAPI catalog.
+Existing HTTP only:
 
-It does **not** edit `application.yml`, JKS, Postgres URL, or Docker.
+- **me** — `GET /users/me` + `/users/my-roles` + probe `GET /mgt/users` (403 is shown as “not admin”, not an empty table)
+- **users** — list/register, patch status / username / credentials, auth logs, soft delete
+- **rbac** — `/rbac-templates` + `POST /users/{id}/roles` (`admin` | `normal` only)
+- **clients** — `GET/POST/PUT /clients/{id}` (no list-all)
+- **system** — `/system-configurations`, housekeeping
+- **try** — OpenAPI catalog
+
+It does **not** edit `application.yml`, JKS, Postgres URL, or Docker. The jar has no bootstrap `ROLE_ADMIN`.
 
 ## Auth
 

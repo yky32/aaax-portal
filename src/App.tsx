@@ -11,11 +11,13 @@ import {
 import Callback from "./pages/Callback";
 import Clients from "./pages/Clients";
 import Overview from "./pages/Overview";
+import Rbac from "./pages/Rbac";
 import System from "./pages/System";
 import Try from "./pages/Try";
 import Users from "./pages/Users";
+import MeBar from "./components/MeBar";
 
-const NAV = ["overview", "clients", "users", "system", "try"] as const;
+const NAV = ["overview", "clients", "users", "rbac", "system", "try"] as const;
 type Page = (typeof NAV)[number];
 
 export default function App() {
@@ -106,15 +108,18 @@ export default function App() {
               ) : null}
               {err ? <pre className="out err">{err}</pre> : null}
             </>
-          ) : (
+          ) : null}
+          {token ? (
             <>
+              <MeBar />
               {page === "overview" ? <Overview /> : null}
               {page === "clients" ? <Clients /> : null}
               {page === "users" ? <Users /> : null}
+              {page === "rbac" ? <Rbac /> : null}
               {page === "system" ? <System /> : null}
               {page === "try" ? <Try /> : null}
             </>
-          )}
+          ) : null}
           {!token && page === "overview" ? <Overview /> : null}
         </main>
       </div>

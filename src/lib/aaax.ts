@@ -43,6 +43,32 @@ type RBody = {
   data?: unknown;
 };
 
+export class AaaxError extends Error {
+  status: number;
+  code?: string;
+  payload: unknown;
+  constructor(status: number, payload: unknown) {
+    const body = payload as RBody;
+    super(body?.message || body?.code || `HTTP ${status}`);
+    this.status = status;
+    this.code = body?.code;
+    this.payload = payload;
+  }
+}
+
+export function isForbidden(err: unknown): boolean {
+  if (!(err instanceof AaaxError)) return false;
+  const code = err.code || "";
+  return err.status === 403 || code === "SAU0403" || code.endsWith("0403");
+}
+
+export function formatErr(err: unknown): string {
+  if (err instanceof AaaxError) {
+    return `HTTP ${err.status}${err.code ? ` ${err.code}` : ""}\n${JSON.stringify(err.payload, null, 2)}`;
+  }
+  return JSON.stringify(err, null, 2);
+}
+
 function isRSuccess(code: string | undefined): boolean {
   if (!code) return false;
   return code === "SYS0000" || code.endsWith("0000");
@@ -70,11 +96,11 @@ export async function fetchR<T>(path: string, init: RequestInit = {}): Promise<T
   const body = json as RBody;
   if (body && typeof body.code === "string") {
     if (status >= 400 || !isRSuccess(body.code)) {
-      throw body;
+      throw new AaaxError(status, json);
     }
     return body.data as T;
   }
-  if (status >= 400) throw json;
+  if (status >= 400) throw new AaaxError(status, json);
   return json as T;
 }
 
