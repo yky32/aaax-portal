@@ -22,6 +22,23 @@ npm run dev
 
 Open http://127.0.0.1:5173 — Sign in with PKCE (hosted `/login` on the jar) or, on loopback only, password grant (`credentials=`).
 
+### Docker (local)
+
+From the **aaax** repo, with this repo cloned as a sibling `../aaax-portal`:
+
+```bash
+docker compose --profile stack -f docker-compose.yml -f compose.portal.yml up --build
+```
+
+Portal listens on **http://127.0.0.1:5173** (nginx, seed PKCE redirect). Not production.
+
+Or build this image alone:
+
+```bash
+docker build -t aaax-portal .
+docker run --rm -p 5173:80 aaax-portal
+```
+
 Seed user: `smoke.primary@aaax.local` / `SmokePrimary!1`.
 
 CORS on the jar already allows `http://localhost:*` and `http://127.0.0.1:*`. Widen `AAAX_CORS_ORIGINS` if you host this UI elsewhere.
