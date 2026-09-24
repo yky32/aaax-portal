@@ -1,13 +1,19 @@
 # AAAX portal
 
-Operator UI for a running **AAAX** jar. Not the marketing site ([aaax-www](https://github.com/yky32/aaax-www)). Not served from the jar.
+Operator UI for a **running AAAX jar**. Not the marketing site. Not served from the jar.
 
 ```text
 browser  →  aaax-portal (:5173)
-                │  PKCE client aaax-portal + Bearer
-                ▼
-           aaax jar (:8081 / your issuer)
+                 │  PKCE  ·  Bearer
+                 ▼
+            aaax jar (:8081)
 ```
+
+Point it at any issuer. Configure what the HTTP APIs already expose.
+
+Jar: [yky32/aaax](https://github.com/yky32/aaax) · Site: [aaax-www](https://aaax-www.vercel.app/)
+
+---
 
 ## Run
 
@@ -20,47 +26,49 @@ npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 — Sign in with PKCE (hosted `/login` on the jar) or, on loopback only, password grant (`credentials=`).
+Open **http://127.0.0.1:5173**. Sign in with PKCE (jar `/login`) or, on loopback only, password grant (`credentials=`).
 
-### Docker (local)
+Seed user: `smoke.primary@aaax.local` / `SmokePrimary!1`.
 
-From the **aaax** repo, with this repo cloned as a sibling `../aaax-portal`:
+### Docker
+
+From **aaax**, this repo cloned as `../aaax-portal`:
 
 ```bash
 docker compose --profile stack -f docker-compose.yml -f compose.portal.yml up --build
 ```
 
-Portal listens on **http://127.0.0.1:5173** (nginx, seed PKCE redirect). Not production.
-
-Or build this image alone:
+Or this image alone (`5173:80` keeps seed PKCE redirects):
 
 ```bash
 docker build -t aaax-portal .
 docker run --rm -p 5173:80 aaax-portal
 ```
 
-Seed user: `smoke.primary@aaax.local` / `SmokePrimary!1`.
+Widen `AAAX_CORS_ORIGINS` on the jar if the UI is not `localhost` / `127.0.0.1`.
 
-CORS on the jar already allows `http://localhost:*` and `http://127.0.0.1:*`. Widen `AAAX_CORS_ORIGINS` if you host this UI elsewhere.
+---
 
-## What it configures
+## What it can do
 
-Existing HTTP only:
+Existing jar HTTP only. **403 on `/mgt` is normal** for the seed user — no bootstrap `ROLE_ADMIN`.
 
-- **me** — `GET /users/me` + `/users/my-roles` + probe `GET /mgt/users` (403 is shown as “not admin”, not an empty table)
-- **users** — list/register, patch status / username / credentials, auth logs, soft delete
-- **rbac** — `/rbac-templates` + `POST /users/{id}/roles` (`admin` | `normal` only)
-- **clients** — `GET/POST/PUT /clients/{id}` (no list-all)
-- **system** — `/system-configurations`, housekeeping
-- **try** — OpenAPI catalog
+| Page | Calls |
+|------|--------|
+| Me | `GET /users/me` · `/users/my-roles` · probe `/mgt/users` |
+| Users | list/register · patch status, username, credentials · auth logs · soft delete |
+| RBAC | `/rbac-templates` · `POST /users/{id}/roles` (`admin` \| `normal`) |
+| Clients | `GET/POST/PUT /clients/{id}` (no list-all) |
+| System | `/system-configurations` · housekeeping |
+| Try | OpenAPI catalog · swagger on the jar |
 
-It does **not** edit `application.yml`, JKS, Postgres URL, or Docker. The jar has no bootstrap `ROLE_ADMIN`.
+Does **not** edit `application.yml`, JKS, Postgres, or Docker.
+
+---
 
 ## Auth
 
-Public client **`aaax-portal`** (PKCE S256, no secret). Redirects:
+Public client **`aaax-portal`** (PKCE S256, no secret), seeded with the jar:
 
 - `http://127.0.0.1:5173/callback`
 - `http://localhost:5173/callback`
-
-Seeded when `AAAX_LOCAL_SEED=true` on the jar.
